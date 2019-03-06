@@ -15,6 +15,7 @@ mod table;
 mod thread;
 mod types;
 mod value;
+mod hashmap;
 
 mod stdlib;
 

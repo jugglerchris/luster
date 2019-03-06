@@ -3,11 +3,13 @@ use std::hash::{Hash, Hasher};
 use std::{fmt, i64, mem};
 
 use num_traits::cast;
-use rustc_hash::FxHashMap;
+//use rustc_hash::FxHashMap;
 
 use gc_arena::{Collect, GcCell, MutationContext};
 
 use crate::Value;
+use crate::hashmap::HashMap;
+type HM<K, V> = HashMap<K, V>;
 
 #[derive(Debug, Copy, Clone, Collect)]
 #[collect(require_copy)]
@@ -72,7 +74,7 @@ impl<'gc> Table<'gc> {
 #[collect(empty_drop)]
 pub struct TableState<'gc> {
     array: Vec<Value<'gc>>,
-    map: FxHashMap<TableKey<'gc>, Value<'gc>>,
+    map: HM<TableKey<'gc>, Value<'gc>>,
 }
 
 impl<'gc> TableState<'gc> {
