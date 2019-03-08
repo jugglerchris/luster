@@ -146,6 +146,7 @@ impl<K: Eq + Hash, V> HashMap<K, V> {
                 Bucket::Tombstone => {
                     // Found an empty bucket
                     self.buckets[idx] = Bucket::Full(k, v);
+                    self.num_items += 1;
                     return None;
                 }
                 Bucket::Full(ref bk, ref mut bv) => {
