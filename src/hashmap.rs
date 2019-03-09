@@ -45,7 +45,36 @@ impl<K: Eq+Hash, V> BucketStore<K, V> {
             buckets, num_items, capacity,
         }
     }
-    pub fn insert(&mut self, k: K, v: V) -> Option<V>
+
+    fn find<Q: ?Sized>(&self, k: &Q) -> Option<(&K, &V)>
+    where K: Borrow<Q>,
+          Q: Hash + Eq
+    {
+        let hash = do_hash(&k);
+        let offset = hash % self.capacity;
+        let mut idx = offset;
+        loop {
+            match self.buckets[idx] {
+                Bucket::Empty |
+                Bucket::Tombstone => {},  // Continue looking
+                Bucket::Full(ref bk, ref bv) => {
+                    if k == bk.borrow() {
+                        return Some((bk, bv));
+                    }
+                    // Else continue looking
+                }
+            }
+            idx += 1;
+            if idx >= self.capacity {
+                idx = 0;
+            }
+            // If we get back to offset, then we must be full, but
+            // we never allow that to happen.
+            assert!(idx != offset);
+        }
+    }
+
+    fn insert(&mut self, k: K, v: V) -> Option<V>
     {
         assert!(self.num_items < self.capacity);
         let hash = do_hash(&k);
@@ -191,7 +220,10 @@ impl<K: Eq + Hash, V> HashMap<K, V> {
     where K: Borrow<Q>,
           Q: Hash + Eq
     {
-        unimplemented!()
+        if let Some((_, v)) = self.buckets.find(k) {
+            return Some(v);
+        }
+        None
     }
 
     pub fn contains_key<Q: ?Sized>(&self, k: &Q) -> bool
