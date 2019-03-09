@@ -70,8 +70,11 @@ impl<K: Eq+Hash, V> BucketStore<K, V> {
             }
             // If we get back to offset, then we must be full, but
             // we never allow that to happen.
-            assert!(idx != offset);
+            if idx == offset {
+                break;
+            }
         }
+        None
     }
 
     fn insert(&mut self, k: K, v: V) -> Option<V>
@@ -230,7 +233,10 @@ impl<K: Eq + Hash, V> HashMap<K, V> {
     where K: Borrow<Q>,
           Q: Hash + Eq
     {
-        unimplemented!()
+        if let Some((_, v)) = self.buckets.find(k) {
+            return true;
+        }
+        false
     }
 
     pub fn remove<Q: ?Sized>(&mut self, k: &Q) -> Option<V>
