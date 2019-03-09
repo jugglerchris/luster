@@ -77,6 +77,32 @@ impl<K: Eq+Hash, V> BucketStore<K, V> {
         None
     }
 
+    fn find_bucket_mut<Q: ?Sized>(&mut self, k: &Q) -> Option<&mut Bucket<K, V>>
+    where K: Borrow<Q>,
+          Q: Hash + Eq
+    {
+        let hash = do_hash(&k);
+        let offset = hash % self.capacity;
+        let mut idx = offset;
+        loop {
+            if let Bucket::Full(ref bk, _) = self.buckets[idx] {
+                if k == bk.borrow() {
+                    return Some(&mut self.buckets[idx]);
+                }
+            }
+            idx += 1;
+            if idx >= self.capacity {
+                idx = 0;
+            }
+            // If we get back to offset, then we must be full, but
+            // we never allow that to happen.
+            if idx == offset {
+                break;
+            }
+        }
+        None
+    }
+
     fn insert(&mut self, k: K, v: V) -> Option<V>
     {
         assert!(self.num_items < self.capacity);
@@ -210,7 +236,7 @@ where
 impl<K: Eq + Hash, V> HashMap<K, V> {
     fn do_resize(&mut self, capacity: usize) {
         let new_buckets = BucketStore::with_capacity(capacity);
-        let mut old_buckets = mem::replace(&mut self.buckets, new_buckets);
+        let old_buckets = mem::replace(&mut self.buckets, new_buckets);
 
         for (k, v) in old_buckets.into_iter() {
             self.buckets.insert(k, v);
@@ -243,7 +269,14 @@ impl<K: Eq + Hash, V> HashMap<K, V> {
     where K: Borrow<Q>,
           Q: Hash + Eq
     {
-        unimplemented!()
+        if let Some(bucket) = self.buckets.find_bucket_mut(k) {
+            let removed = mem::replace(bucket, Bucket::Tombstone);
+            match removed {
+                Bucket::Full(k, v) => { return Some(v); }
+                _ => panic!("Hashmap error"),
+            }
+        }
+        None
     }
 
     pub fn len(&self) -> usize {
