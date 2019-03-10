@@ -182,7 +182,7 @@ struct BucketsIter<K, V> {
 
 impl<K, V> Iterator for BucketsIter<K, V> {
     type Item = (K, V);
-    fn next(&mut self) -> Option< Self::Item> {
+    fn next(&mut self) -> Option<Self::Item> {
         loop {
             let bucket = self.buckets.buckets.pop();
             match bucket {
@@ -259,7 +259,7 @@ impl<K: Eq + Hash, V> HashMap<K, V> {
     where K: Borrow<Q>,
           Q: Hash + Eq
     {
-        if let Some((_, v)) = self.buckets.find(k) {
+        if let Some(_) = self.buckets.find(k) {
             return true;
         }
         false
