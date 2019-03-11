@@ -55,8 +55,8 @@ impl<K: Eq+Hash, V> BucketStore<K, V> {
         let mut idx = offset;
         loop {
             match self.buckets[idx] {
-                Bucket::Empty |
-                Bucket::Tombstone => {},  // Continue looking
+                Bucket::Empty => { return None; }
+                Bucket::Tombstone => {}  // Continue looking
                 Bucket::Full(ref bk, ref bv) => {
                     if k == bk.borrow() {
                         return Some((bk, bv));
