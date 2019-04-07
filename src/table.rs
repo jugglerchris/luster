@@ -3,7 +3,7 @@ use std::hash::{Hash, Hasher};
 use std::{fmt, i64, mem};
 
 use num_traits::cast;
-use rustc_hash::FxHashMap;
+use ::hashbrown::HashMap as HHashMap;
 
 use gc_arena::{Collect, GcCell, MutationContext};
 
@@ -72,7 +72,7 @@ impl<'gc> Table<'gc> {
 #[collect(empty_drop)]
 pub struct TableState<'gc> {
     array: Vec<Value<'gc>>,
-    map: FxHashMap<TableKey<'gc>, Value<'gc>>,
+    map: HHashMap<TableKey<'gc>, Value<'gc>>,
 }
 
 impl<'gc> TableState<'gc> {

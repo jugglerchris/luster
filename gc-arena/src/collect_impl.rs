@@ -3,6 +3,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::hash::{BuildHasher, Hash};
 use std::rc::Rc;
 use std::sync::Arc;
+use hashbrown::HashMap as HHashMap;
 
 use crate::collect::Collect;
 use crate::context::CollectionContext;
@@ -133,6 +134,26 @@ unsafe impl<T: Collect> Collect for Vec<T> {
 }
 
 unsafe impl<K, V, S> Collect for HashMap<K, V, S>
+where
+    K: Eq + Hash + Collect,
+    V: Collect,
+    S: BuildHasher,
+{
+    #[inline]
+    fn needs_trace() -> bool {
+        K::needs_trace() || V::needs_trace()
+    }
+
+    #[inline]
+    fn trace(&self, cc: CollectionContext) {
+        for (k, v) in self {
+            k.trace(cc);
+            v.trace(cc);
+        }
+    }
+}
+
+unsafe impl<K, V, S> Collect for HHashMap<K, V, S>
 where
     K: Eq + Hash + Collect,
     V: Collect,
