@@ -56,6 +56,33 @@ pub fn load_base<'gc>(mc: MutationContext<'gc, '_>, root: Root<'gc>, env: Table<
 
     env.set(
         mc,
+        String::new_static(b"next"),
+        Callback::new_immediate(mc, |args| {
+            let table = match args.get(0).cloned().unwrap_or(Value::Nil) {
+                Value::Table(table) => table,
+                value => {
+                    return Err(TypeError {
+                        expected: "table",
+                        found: value.type_name(),
+                    }
+                    .into());
+                }
+            };
+            let key = args.get(1).cloned().unwrap_or(Value::Nil);
+            let mut result = vec![];
+            if let Some((nextkey, nextval)) = table.next(key) {
+                result.push(nextkey);
+                result.push(nextval);
+            } else {
+                result.push(Value::Nil);
+            }
+            return Ok(CallbackResult::Return(result));
+        })
+    )
+    .unwrap();
+
+    env.set(
+        mc,
         String::new_static(b"pcall"),
         Callback::new_immediate_with(mc, root.interned_strings, |interned_strings, mut args| {
             let function = match args.get(0).cloned().unwrap_or(Value::Nil) {

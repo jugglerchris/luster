@@ -66,6 +66,10 @@ impl<'gc> Table<'gc> {
     pub fn length(&self) -> i64 {
         self.0.read().length()
     }
+
+    pub fn next<K: Into<Value<'gc>>>(&self, key: K) -> Option<(Value<'gc>, Value<'gc>)> {
+        self.0.read().next(key.into())
+    }
 }
 
 #[derive(Debug, Collect, Default)]
@@ -87,6 +91,45 @@ impl<'gc> TableState<'gc> {
             self.map.get(&key).cloned().unwrap_or(Value::Nil)
         } else {
             Value::Nil
+        }
+    }
+
+    pub fn next(&self, key: Value<'gc>) -> Option<(Value<'gc>, Value<'gc>)> {
+        eprintln!("next: key={:?}", key);
+        let mut index = if let Value::Nil = key {
+            // Start at the beginning
+            0
+        } else if let Some(mut index) = to_array_index(key) {
+            eprintln!("next: integer index={:?}", index);
+            // Start after this item
+            index + 1
+        } else {
+            /* Not in array part, so set to max value */
+            self.array.len()
+        };
+        eprintln!("index={}/{}", index, self.array.len());
+        while index < self.array.len() {
+            match self.array[index] {
+                Value::Nil => (), // Continue searching
+                val => {
+                    return Some((((index+1) as i64).into(), val));
+                },
+            }
+            index += 1;
+        }
+
+        if let Ok(key) = TableKey::new(key) {
+            eprintln!("as table key: {:?}", key);
+            match self.map.next_after(Some(&key)) {
+                None => None,
+                Some((k, v)) => {
+                    return Some((k.0.clone(), v.clone()));
+                },
+            }
+        } else {
+            eprintln!("Not as table key");
+            // Todo: this should be an error
+            None
         }
     }
 
