@@ -96,16 +96,17 @@ impl<'gc> TableState<'gc> {
 
     pub fn next(&self, key: Value<'gc>) -> Option<(Value<'gc>, Value<'gc>)> {
         eprintln!("next: key={:?}", key);
-        let mut index = if let Value::Nil = key {
-            // Start at the beginning
-            0
-        } else if let Some(mut index) = to_array_index(key) {
+        let (from_array, mut index) = if let Value::Nil = key {
+            // Start at the beginning.
+            (true, 0)
+        } else if let Some(index) = to_array_index(key) {
             eprintln!("next: integer index={:?}", index);
             // Start after this item
-            index + 1
+            (true, index + 1)
         } else {
-            /* Not in array part, so set to max value */
-            self.array.len()
+            // Not in the array part at all, so we'll look it up
+            // in the hash part.
+            (false, self.array.len())
         };
         eprintln!("index={}/{}", index, self.array.len());
         while index < self.array.len() {
@@ -118,18 +119,20 @@ impl<'gc> TableState<'gc> {
             index += 1;
         }
 
-        if let Ok(key) = TableKey::new(key) {
-            eprintln!("as table key: {:?}", key);
-            match self.map.next_after(Some(&key)) {
-                None => None,
-                Some((k, v)) => {
-                    return Some((k.0.clone(), v.clone()));
-                },
-            }
-        } else {
-            eprintln!("Not as table key");
-            // Todo: this should be an error
+        let tkey = if from_array {
             None
+        } else {
+            // This will return None if key is Nil, which is what we
+            // want, to get the first item in the hash.
+            TableKey::new(key).ok()
+        };
+
+        eprintln!("as table key: {:?}", key);
+        match self.map.next_after(tkey.as_ref()) {
+            None => None,
+            Some((k, v)) => {
+                return Some((k.0.clone(), v.clone()));
+            },
         }
     }
 
