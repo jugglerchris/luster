@@ -94,9 +94,33 @@ function test5()
     return t[1] == 1 and t[2] == 2 and t[3] == 3 and t.a == "a"
 end
 
+function test6()
+    -- Until pairs is in the stdlib
+    function pairs(t)
+        return next, t, nil
+    end
+
+    t = {
+        1,
+        2,
+        a=4,
+        foo=8
+    }
+    sum = 0
+    keystring = ""
+    count = 0
+    for k,v in pairs(t) do
+        keystring = keystring .. k
+        sum = sum + v
+        count = count + 1
+    end
+    return sum == 15 and count == 4
+end
+
 return
     test1() and
     test2() and
     test3() and
     test4() and
-    test5()
+    test5() and
+    test6()
