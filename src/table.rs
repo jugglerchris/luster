@@ -95,12 +95,10 @@ impl<'gc> TableState<'gc> {
     }
 
     pub fn next(&self, key: Value<'gc>) -> Option<(Value<'gc>, Value<'gc>)> {
-        eprintln!("next: key={:?}", key);
         let (from_array, mut index) = if let Value::Nil = key {
             // Start at the beginning.
             (true, 0)
         } else if let Some(index) = to_array_index(key) {
-            eprintln!("next: integer index={:?}", index);
             // Start after this item
             (true, index + 1)
         } else {
@@ -108,7 +106,6 @@ impl<'gc> TableState<'gc> {
             // in the hash part.
             (false, self.array.len())
         };
-        eprintln!("index={}/{}", index, self.array.len());
         while index < self.array.len() {
             match self.array[index] {
                 Value::Nil => (), // Continue searching
@@ -127,7 +124,6 @@ impl<'gc> TableState<'gc> {
             TableKey::new(key).ok()
         };
 
-        eprintln!("as table key: {:?}", key);
         match self.map.next_after(tkey.as_ref()) {
             None => None,
             Some((k, v)) => {
