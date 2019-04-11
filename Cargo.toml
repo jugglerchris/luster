@@ -23,6 +23,6 @@ rand = "0.6"
 rand_xoshiro = "0.1"
 rustc-hash = "1.0"
 rustyline = "3.0"
-hashbrown = { path = "../hashbrown" }
+hashbrown = { git = "https://github.com/jugglerchris/hashbrown.git", branch = "hash_next" }
 gc-arena = { path = "./gc-arena" }
 gc-sequence = { path = "./gc-sequence" }

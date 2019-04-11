@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 gc-arena-derive = { path = "./gc-arena-derive" }
-hashbrown = { path = "../../hashbrown" }
+hashbrown = { git = "https://github.com/jugglerchris/hashbrown.git", branch = "hash_next" }
 
 [dev-dependencies]
 rand = "0.5"
